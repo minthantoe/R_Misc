@@ -1,0 +1,61 @@
+---
+#title: "Kyat"
+#author: "Min Toe"
+#date: "07/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width=10, message = FALSE)
+library(tidyverse)
+library("ggplot2")
+library("jpeg")
+library("grid")
+```
+
+
+```{r 1}
+# Load and format the raw data
+df <- read_csv("HistoryExchangeReport.csv")
+df$FixedDate <-as.Date(df$Date, "%m/%d/%Y")
+#df$Date <- as.Date(df$Date, "%d/%m/%Y")
+
+df <- df[df$FixedDate >= as.Date("2021-01-15"),]
+df$abc <- df$Rate[1]/df$Rate
+#df$PPP <- df$abc / df$abc[1]
+
+#Load the banknote image
+bill <- readJPEG("Kyat.jpg")
+bill <- rasterGrob(bill, width=unit(1,"npc"), height=unit(1,"npc"), interpolate=FALSE) 
+
+# Draw the chart
+graph <- ggplot(df, aes(x = FixedDate, y = abc)) + 
+  
+# First draw the banknote. You must set the starting position of axis Y "ymin"
+annotation_custom(bill, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+
+# Then draw over it the white ribbon from the top of the graph to the data series
+geom_ribbon(aes(ymin = abc, ymax = Inf), fill = "white") +
+geom_line(size=0.1, colour="#000000") +
+
+# Add the appropriate scale
+scale_x_date(date_breaks="1 week",date_labels = "%", expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0), labels=scales::percent) +
+
+# Put the labels to the chart
+labs(
+  title = "US Dollars (USD) per Myanmar Kyat (MMK) Converstion Rate",
+  subtitle = "Daily exchange rate of USD against Kyat",
+  x="",
+  y="",
+  caption="Source: exchange-rates.org") +
+
+# Add a theme and other aesthetics modifications
+theme_grey() +
+theme(plot.title = element_text(face="bold", hjust=0.5, size=rel(1.5)),
+      plot.subtitle = element_text(face="italic", hjust=0.5))
+
+# Plot it!
+graph
+
+```

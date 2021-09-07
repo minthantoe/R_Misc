@@ -1,0 +1,149 @@
+---
+title: "Covid Wave Length"
+author: "Min Toe"
+date: "7/17/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width=10, message = FALSE)
+library(tidyverse) # a pretty much essential library, contains ggplot, readr, dplyr, etc.
+library(extrafont) # needed for printing to pdf
+library(zoo) # moving averages
+library(hrbrthemes) # themes for graphs
+
+options(scipen = 999) # to disable scientific notation on graphs
+```
+
+```{r dataLoad}
+#covid_raw <- read.csv("https://covid.ourworldindata.org/data/owid-covid-data.csv") #on the net
+covid_raw <- read.csv("owid-covid-data.csv") #local file
+```
+
+```{r data}
+#data manipulation
+countrylist <- covid_raw[,c(3,4,6)]
+countrylist$FixedDate <- as.Date(countrylist$date)
+countrylist$new_cases[countrylist$new_cases < 0 ] <- 0
+#head(names(major))
+#tail(names(major))
+
+#this codeblock provided by Martin Frigaard @https://www.storybench.org/how-to-calculate-a-rolling-average-in-r/
+countrylist <- countrylist %>%
+    mutate(death_03da = zoo::rollmean(new_cases, k = 3, fill = NA),
+                  death_05da = zoo::rollmean(new_cases, k = 5, fill = NA),
+                  death_07da = zoo::rollmean(new_cases, k = 7, fill = NA),
+                  death_15da = zoo::rollmean(new_cases, k = 15, fill = NA),
+                  death_21da = zoo::rollmean(new_cases, k = 21, fill = NA)) %>% 
+    ungroup()
+
+```
+
+
+
+```{r spain}
+spain<-countrylist[countrylist$location == "Spain",] 
+spain <- spain[spain$FixedDate >= as.Date("2020-12-01") & spain$FixedDate <= as.Date("2021-03-10"),]
+spain$day <-seq.int(nrow(spain))
+
+ggplot(spain, aes(x=day, y=death_07da, color=location)) + geom_line(size = 1) + labs(title = "Duration Of Spain's Highest COVID Wave", 
+                  subtitle = "Rolling 7-days average",
+                  y = "Cases", 
+                  color = "Legend",
+                  caption="Source: Our World in Data",
+                  x = "Days") + 
+  theme_ipsum() + theme(legend.position="none") + scale_x_continuous(expand=c(0,0))
+
+```
+
+```{r uk}
+uk <-countrylist[countrylist$location == "United Kingdom",] 
+uk <- uk[uk$FixedDate >= as.Date("2020-11-26") & uk$FixedDate <= as.Date("2021-02-15"),]
+uk$day <-seq.int(nrow(uk))
+
+ggplot(uk, aes(x=day, y=death_07da, color=location)) + geom_line(size = 1) +  labs(title = "Duration Of The United Kingdom's Highest COVID Wave", 
+                  subtitle = "Rolling 7-days average",
+                  y = "Cases", 
+                  color = "Legend",
+                  caption="Source: Our World in Data",
+                  x = "Days") +
+  theme_ipsum() + theme(legend.position="none") + scale_x_continuous(expand=c(0,0))
+```
+
+```{r us}
+us <-countrylist[countrylist$location == "United States",] 
+us <- us[us$FixedDate >= as.Date("2020-10-21") & us$FixedDate <= as.Date("2021-02-21"),]
+us$day <-seq.int(nrow(us))
+
+ggplot(us, aes(x=day, y=death_07da, color=location)) + geom_line(size = 1) +  labs(title = "Duration Of The United States' Highest COVID Wave", 
+                  subtitle = "Rolling 7-days average",
+                  y = "Cases", 
+                  color = "Legend",
+                  caption="Source: Our World in Data",
+                  x = "Days") +
+  theme_ipsum() + theme(legend.position="none") + scale_x_continuous(expand=c(0,0))
+```
+
+```{r india}
+india <-countrylist[countrylist$location == "India",] 
+india <- india[india$FixedDate >= as.Date("2021-03-10") & india$FixedDate <= as.Date("2021-07-07"),]
+india$day <-seq.int(nrow(india))
+
+ggplot(india, aes(x=day, y=death_07da, color=location)) + geom_line(size = 1) + labs(title = "Duration Of India's Highest COVID Wave", 
+                  subtitle = "Rolling 7-days average",
+                  y = "Cases", 
+                  color = "Legend",
+                  caption="Source: Our World in Data",
+                  x = "Days") + 
+  theme_ipsum() + theme(legend.position="none") + scale_x_continuous(expand=c(0,0))
+```
+
+```{r iran}
+iran <-countrylist[countrylist$location == "Iran",] 
+iran <- iran[iran$FixedDate >= as.Date("2021-03-25") & iran$FixedDate <= as.Date("2021-05-29"),]
+iran$day <-seq.int(nrow(iran))
+
+ggplot(iran, aes(x=day, y=death_07da, color=location)) + geom_line(size = 1) + 
+                  labs(title = "Duration Of Iran's Highest COVID Wave", 
+                  subtitle = "Rolling 7-days average",
+                  y = "Cases", 
+                  color = "Legend",
+                  caption="Source: Our World in Data",
+                  x = "Days") + 
+  theme_ipsum() + theme(legend.position="none") + scale_x_continuous(expand=c(0,0))
+```
+
+```{r SA}
+SA <-countrylist[countrylist$location == "South Africa",] 
+SA <- SA[SA$FixedDate >= as.Date("2020-12-01") & SA$FixedDate <= as.Date("2021-02-08"),]
+SA$day <-seq.int(nrow(SA))
+
+ggplot(SA, aes(x=day, y=death_07da, color=location)) + geom_line(size = 1) +  labs(title = "Duration Of South Africa's Highest COVID Wave", 
+                  subtitle = "Rolling 7-days average",
+                  y = "Cases", 
+                  color = "Legend",
+                  caption="Source: Our World in Data",
+                  x = "Days") +
+  theme_ipsum() + theme(legend.position="none") + scale_x_continuous(expand=c(0,0))
+```
+
+```{r final}
+ggplot() + 
+  geom_line(data = spain, aes(x=day, y=death_07da, color=location), size = 1) + 
+  geom_line(data = uk, aes(x=day, y=death_07da, color=location), size = 1) +
+  geom_line(data = us, aes(x=day, y=death_07da, color=location), size = 1) +
+  geom_line(data = india, aes(x=day, y=death_07da, color=location), size = 1) +
+  geom_line(data = iran, aes(x=day, y=death_07da, color=location), size = 1) +
+  geom_line(data = SA, aes(x=day, y=death_07da, color=location), size = 1) +
+  labs(title = "Duration Of Countries' Highest COVID Wave", 
+                  subtitle = "Rolling 7-days average",
+                  y = "Cases", 
+                  color = "Legend",
+                  caption="Source: Our World in Data",
+                  x = "Days") + 
+  theme_ipsum() +
+  #theme(legend.position="none") +
+  scale_x_continuous(expand=c(0,0))
+```
